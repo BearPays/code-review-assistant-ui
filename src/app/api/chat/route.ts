@@ -75,9 +75,34 @@ const RAG_API_URL = 'http://localhost:8001';
 
 export async function POST(req: Request) {
   try {
-    const { query, mode } = await req.json();
+    const { query, mode, messages = [] } = await req.json();
 
     console.log('API route received query:', query);
+    console.log('API route received messages:', messages.length);
+    
+    // Check if we should use mock API instead of the real RAG API
+    if (process.env.USE_MOCK_API === 'true') {
+      console.log('Using mock API response');
+      return NextResponse.json<ChatResponse>({
+        content: MOCK_RESPONSE.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
+    
+    // Prepare a more contextual query if there are previous messages
+    let contextualQuery = query;
+    if (messages.length > 0) {
+      // Get the last few messages to provide context (limit to avoid token limits)
+      const recentMessages = messages.slice(-5);
+      const conversationContext = recentMessages
+        .map((msg: { role: string; content: string }) => `${msg.role}: ${msg.content}`)
+        .join('\n');
+      
+      // Append conversation history to the query for better context
+      contextualQuery = `Previous conversation:\n${conversationContext}\n\nCurrent query: ${query}`;
+    }
+    
+    console.log('Sending contextual query to RAG API:', contextualQuery.substring(0, 100) + '...');
     
     // Call the RAG API backend
     const response = await fetch(`${RAG_API_URL}/query`, {
@@ -85,27 +110,39 @@ export async function POST(req: Request) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ query }),
+      body: JSON.stringify({ query: contextualQuery }),
     });
 
+    // Get the response status and text for better error handling
+    const status = response.status;
+    const statusText = response.statusText;
+    
     if (!response.ok) {
-      console.error(`Error from RAG API: ${response.status} ${response.statusText}`);
-      throw new Error(`Failed to fetch from RAG API: ${response.statusText}`);
+      console.error(`Error from RAG API: ${status} ${statusText}`);
+      throw new Error(`Failed to fetch from RAG API: ${statusText}`);
     }
 
     // Parse the response from the RAG API
-    const data: RAGAPIResponse = await response.json();
-    console.log('RAG API response received:', JSON.stringify(data, null, 2));
+    const data = await response.json();
+    console.log('RAG API response received:', JSON.stringify(data, null, 2).substring(0, 200) + '...');
 
     // Ensure the response has the expected format
-    if (!data.answer) {
-      console.error('Invalid response format from RAG API:', data);
-      throw new Error('Invalid response format from RAG API');
+    if (!data || typeof data !== 'object') {
+      console.error('Invalid response format from RAG API: Not an object');
+      throw new Error('Invalid response format from RAG API: Not an object');
+    }
+    
+    if (!data.answer && !data.message) {
+      console.error('Invalid response format from RAG API: No answer or message property', data);
+      throw new Error('Invalid response format from RAG API: Missing answer property');
     }
 
+    // Handle different response formats - prefer 'answer' but fall back to 'message'
+    const content = data.answer || data.message;
+    
     // Return a properly formatted response that the frontend expects
     return NextResponse.json<ChatResponse>({
-      content: data.answer,
+      content,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {

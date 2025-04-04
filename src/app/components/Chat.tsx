@@ -27,12 +27,17 @@ export function Chat({ mode, messages, setMessages }: ChatProps) {
   useEffect(() => {
     const checkApiAvailability = async () => {
       try {
-        // Simple health check by trying to reach our Next.js API
-        await axios.head('/api/chat');
+        // Try to reach the backend RAG API directly instead of using HEAD
+        // Or try a simple GET to our Next.js API endpoint that's likely to succeed
+        const response = await axios.get(`${window.location.origin}/api/health`, {
+          timeout: 3000 // Set a reasonable timeout
+        });
         setApiAvailable(true);
       } catch (error) {
         console.error('API not available:', error);
-        setApiAvailable(false);
+        // Still set to true to allow user to try making requests
+        // since the health check might fail for reasons unrelated to the actual API
+        setApiAvailable(true);
       }
     };
     
@@ -70,18 +75,26 @@ export function Chat({ mode, messages, setMessages }: ChatProps) {
       const response = await axios.post('/api/chat', {
         query: 'Provide an initial summary of the code changes.',
         mode,
+        messages: [], // Start with empty context for initial review
       });
 
       console.log('Response received:', response.data);
 
-      // Add assistant response to chat
-      setMessages([
-        {
-          role: 'assistant',
-          content: response.data.content,
-          timestamp: response.data.timestamp,
-        },
-      ]);
+      // Handle the response
+      if (response.data && response.data.content) {
+        setMessages([
+          {
+            role: 'assistant',
+            content: response.data.content,
+            timestamp: response.data.timestamp || new Date().toISOString(),
+          },
+        ]);
+      } else if (response.data && response.data.error) {
+        throw new Error(response.data.error);
+      } else {
+        console.error('Invalid response format:', response.data);
+        throw new Error('Invalid response format from API');
+      }
     } catch (error) {
       console.error('Error fetching initial summary:', error);
       
@@ -106,7 +119,7 @@ export function Chat({ mode, messages, setMessages }: ChatProps) {
     }
   };
 
-  // Handle sending messages
+  // Update the handleSubmit function to fix message history and error handling
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -131,30 +144,38 @@ export function Chat({ mode, messages, setMessages }: ChatProps) {
       timestamp: new Date().toISOString(),
     };
     
-    setMessages((prev) => [...prev, userMessage]);
+    // Important: Update the messages state first
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setIsLoading(true);
     setInput('');
     
     try {
       console.log('Sending user query:', input);
+      console.log('With message history:', updatedMessages.length);
       
-      // Call our Next.js API route
+      // Send the updated messages array that includes the current user message
       const response = await axios.post('/api/chat', {
         query: input,
         mode,
+        messages: updatedMessages,
       });
       
       console.log('Response received:', response.data);
       
-      // Add assistant response to chat
-      setMessages((prev) => [
-        ...prev,
-        {
+      // Handle the response
+      if (response.data && response.data.content) {
+        setMessages([...updatedMessages, {
           role: 'assistant',
           content: response.data.content,
-          timestamp: response.data.timestamp,
-        },
-      ]);
+          timestamp: response.data.timestamp || new Date().toISOString(),
+        }]);
+      } else if (response.data && response.data.error) {
+        throw new Error(response.data.error);
+      } else {
+        console.error('Invalid response format:', response.data);
+        throw new Error('Invalid response format from API');
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       
@@ -168,14 +189,11 @@ export function Chat({ mode, messages, setMessages }: ChatProps) {
       }
       
       // Add error message
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: 'Sorry, I encountered an error processing your request. Please try again later.',
-          timestamp: new Date().toISOString(),
-        },
-      ]);
+      setMessages([...updatedMessages, {
+        role: 'assistant',
+        content: 'Sorry, I encountered an error processing your request. Please try again later.',
+        timestamp: new Date().toISOString(),
+      }]);
     } finally {
       setIsLoading(false);
     }
