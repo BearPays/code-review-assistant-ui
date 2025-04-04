@@ -196,13 +196,18 @@ export function Chat({ mode }: ChatProps) {
       
       <form onSubmit={handleSubmit} className="border-t p-4">
         <div className="flex items-center space-x-2">
-          <input
-            type="text"
+          <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
-            className="flex-1 border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
             disabled={isLoading}
+            rows={3}
+            onInput={(e) => {
+              const target = e.target as HTMLTextAreaElement;
+              target.style.height = 'auto';
+              target.style.height = `${Math.min(target.scrollHeight, 200)}px`;
+            }}
           />
           <button
             type="submit"
