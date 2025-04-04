@@ -31,7 +31,7 @@ export default function Home() {
     <div className="flex flex-col h-screen">
       <header className="bg-white dark:bg-gray-900 border-b shadow-sm p-4">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-xl font-bold">Code Review Assistant</h1>
+          <h1 className="text-xl font-bold">Code Review AI Assistant</h1>
           <button
             onClick={() => setIsSettingsOpen(true)}
             className="px-3 py-1 text-sm border rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
