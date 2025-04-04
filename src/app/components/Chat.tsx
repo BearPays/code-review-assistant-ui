@@ -5,7 +5,7 @@ import { ChatMessage } from './ChatMessage';
 import { MarkdownRenderer } from './MarkdownRenderer';
 import axios from 'axios';
 
-interface Message {
+export interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
@@ -13,11 +13,11 @@ interface Message {
 
 interface ChatProps {
   mode: 'A' | 'B';
+  messages: Message[];
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
 }
 
-// Replace direct RAG API integration with calls to our Next.js API route
-export function Chat({ mode }: ChatProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export function Chat({ mode, messages, setMessages }: ChatProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [apiAvailable, setApiAvailable] = useState(true);
@@ -42,7 +42,7 @@ export function Chat({ mode }: ChatProps) {
   // Reset messages when mode changes
   useEffect(() => {
     setMessages([]);
-  }, [mode]);
+  }, [mode, setMessages]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -253,8 +253,8 @@ export function Chat({ mode }: ChatProps) {
           />
           <button
             type="submit"
-            disabled={isLoading || input.trim() === '' || !apiAvailable}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            disabled={isLoading || input.trim() === ''}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
           >
             Send
           </button>

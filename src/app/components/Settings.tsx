@@ -27,7 +27,7 @@ export function Settings({ isOpen, onClose, apiKey, onApiKeyChange }: SettingsPr
           <h2 className="text-xl font-bold">Settings</h2>
           <button 
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500 hover:text-gray-700 cursor-pointer"
           >
             ✕
           </button>
@@ -55,13 +55,13 @@ export function Settings({ isOpen, onClose, apiKey, onApiKeyChange }: SettingsPr
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border rounded-md hover:bg-gray-100"
+              className="px-4 py-2 border rounded-md hover:bg-gray-100 cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 cursor-pointer"
             >
               Save
             </button>
@@ -70,4 +70,4 @@ export function Settings({ isOpen, onClose, apiKey, onApiKeyChange }: SettingsPr
       </div>
     </div>
   );
-} 
+}
