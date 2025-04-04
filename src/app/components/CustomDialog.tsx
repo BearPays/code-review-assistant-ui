@@ -26,13 +26,13 @@ export const CustomDialog: React.FC<CustomDialogProps> = ({
           <div className="flex justify-end space-x-4">
             <button
               onClick={onCancel}
-              className="px-4 py-2 text-sm border rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+              className="px-4 py-2 text-sm border rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
             >
               Cancel
             </button>
             <button
               onClick={onConfirm}
-              className="px-4 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              className="px-4 py-2 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 cursor-pointer"
             >
               Confirm
             </button>

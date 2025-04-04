@@ -5,6 +5,7 @@ import { Chat, Message } from './components/Chat';
 import { ModeSelector } from './components/ModeSelector';
 import { Settings } from './components/Settings';
 import { CustomDialog } from './components/CustomDialog';
+import Image from 'next/image';
 
 export default function Home() {
   const [mode, setMode] = useState<'A' | 'B'>('A');
@@ -59,10 +60,18 @@ export default function Home() {
     <div className="flex flex-col h-screen">
       <header className="bg-white dark:bg-gray-900 border-b shadow-sm p-4">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-xl font-bold">Code Review AI Assistant</h1>
+          <div className="flex items-center space-x-2">
+            <Image
+              src="/Code Review Assistant Logo.png"
+              alt="Code Review Assistant Logo"
+              width={40}
+              height={40}
+            />
+            <h1 className="text-xl font-bold">Code Review AI Assistant</h1>
+          </div>
           <button
             onClick={() => setIsSettingsOpen(true)}
-            className="px-3 py-1 text-sm border rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+            className="px-3 py-1 text-sm border rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
           >
             Settings
           </button>
