@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ChatMessage } from './ChatMessage';
 import { MarkdownRenderer } from './MarkdownRenderer';
+import axios from 'axios';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -14,11 +15,29 @@ interface ChatProps {
   mode: 'A' | 'B';
 }
 
+// Replace direct RAG API integration with calls to our Next.js API route
 export function Chat({ mode }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [apiAvailable, setApiAvailable] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Check if our API is available
+  useEffect(() => {
+    const checkApiAvailability = async () => {
+      try {
+        // Simple health check by trying to reach our Next.js API
+        await axios.head('/api/chat');
+        setApiAvailable(true);
+      } catch (error) {
+        console.error('API not available:', error);
+        setApiAvailable(false);
+      }
+    };
+    
+    checkApiAvailability();
+  }, []);
 
   // Reset messages when mode changes
   useEffect(() => {
@@ -30,49 +49,55 @@ export function Chat({ mode }: ChatProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Get API key from localStorage
-  const getApiKey = () => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('openai-api-key') || '';
-    }
-    return '';
-  };
-
   // Handle initial code review button click
   const handleInitialCodeReview = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: [],
-          mode: 'A',
-          apiKey: getApiKey(),
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch summary');
-      }
-
-      const data = await response.json();
-
+    if (!apiAvailable) {
       setMessages([
         {
           role: 'assistant',
-          content: data.message,
-          timestamp: data.timestamp,
+          content: 'Unable to connect to the API. Please try again later.',
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      console.log('Sending initial code review request');
+      
+      // Call our Next.js API route
+      const response = await axios.post('/api/chat', {
+        query: 'Provide an initial summary of the code changes.',
+        mode,
+      });
+
+      console.log('Response received:', response.data);
+
+      // Add assistant response to chat
+      setMessages([
+        {
+          role: 'assistant',
+          content: response.data.content,
+          timestamp: response.data.timestamp,
         },
       ]);
     } catch (error) {
       console.error('Error fetching initial summary:', error);
+      
+      // Log more details about the error
+      if (axios.isAxiosError(error)) {
+        console.error('API error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          responseData: error.response?.data,
+        });
+      }
+      
       setMessages([
         {
           role: 'assistant',
-          content: 'Sorry, I encountered an error generating the initial summary. Please try again.',
+          content: 'Sorry, I encountered an error generating the initial summary. Please try again later.',
           timestamp: new Date().toISOString(),
         },
       ]);
@@ -87,6 +112,18 @@ export function Chat({ mode }: ChatProps) {
     
     if (input.trim() === '' || isLoading) return;
     
+    if (!apiAvailable) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: 'Unable to connect to the API. Please try again later.',
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+      return;
+    }
+    
     // Add user message to chat
     const userMessage: Message = {
       role: 'user',
@@ -99,54 +136,43 @@ export function Chat({ mode }: ChatProps) {
     setInput('');
     
     try {
-      // Format messages for the API
-      const apiMessages = messages.map(msg => ({
-        role: msg.role,
-        content: msg.content,
-      }));
+      console.log('Sending user query:', input);
       
-      // Add the new user message
-      apiMessages.push({
-        role: 'user',
-        content: input,
+      // Call our Next.js API route
+      const response = await axios.post('/api/chat', {
+        query: input,
+        mode,
       });
       
-      // Send to API
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: apiMessages,
-          mode,
-          apiKey: getApiKey(),
-        }),
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
-      
-      const data = await response.json();
+      console.log('Response received:', response.data);
       
       // Add assistant response to chat
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: data.message,
-          timestamp: data.timestamp,
+          content: response.data.content,
+          timestamp: response.data.timestamp,
         },
       ]);
     } catch (error) {
       console.error('Error sending message:', error);
+      
+      // Log more details about the error
+      if (axios.isAxiosError(error)) {
+        console.error('API error details:', {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          responseData: error.response?.data,
+        });
+      }
+      
       // Add error message
       setMessages((prev) => [
         ...prev,
         {
           role: 'assistant',
-          content: 'Sorry, I encountered an error processing your request. Please try again.',
+          content: 'Sorry, I encountered an error processing your request. Please try again later.',
           timestamp: new Date().toISOString(),
         },
       ]);
@@ -157,12 +183,20 @@ export function Chat({ mode }: ChatProps) {
 
   return (
     <div className="flex flex-col h-full">
+      {!apiAvailable && (
+        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4" role="alert">
+          <p className="font-bold">API Connection Issue</p>
+          <p>Cannot connect to the API. Please try again later or check if the server is running.</p>
+        </div>
+      )}
+      
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && mode === 'A' && !isLoading && (
           <div className="text-center mt-8">
             <button
               onClick={handleInitialCodeReview}
               className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={!apiAvailable}
             >
               Generate Initial Code Review
             </button>
@@ -207,9 +241,9 @@ export function Chat({ mode }: ChatProps) {
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..."
+            placeholder={apiAvailable ? "Type your message..." : "API unavailable. Please start the backend server."}
             className="flex-1 border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
-            disabled={isLoading}
+            disabled={isLoading || !apiAvailable}
             rows={3}
             onInput={(e) => {
               const target = e.target as HTMLTextAreaElement;
@@ -219,7 +253,7 @@ export function Chat({ mode }: ChatProps) {
           />
           <button
             type="submit"
-            disabled={isLoading || input.trim() === ''}
+            disabled={isLoading || input.trim() === '' || !apiAvailable}
             className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
           >
             Send

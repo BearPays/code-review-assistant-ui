@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import OpenAI from 'openai';
 
 const MOCK_RESPONSE: { message: string; timestamp: string } = {
   message: `# My Heading
@@ -53,62 +52,66 @@ That is all for this markdown demonstration. Goodbye!`,
   timestamp: new Date().toISOString(),
 };
 
-// Define response structure
+// Define response structure matching what the frontend expects
 export interface ChatResponse {
-  message: string;
+  content: string;
   timestamp: string;
 }
 
+// Define structure of the RAG API response
+interface RAGAPIResponse {
+  answer: string;
+  sources?: Array<{
+    file_path: string;
+    file_name: string;
+    file_type: string;
+    file_size: number;
+    creation_date: string;
+    last_modified_date: string;
+  }>;
+}
+
+const RAG_API_URL = 'http://localhost:8001';
+
 export async function POST(req: Request) {
   try {
-    const { messages, mode, apiKey } = await req.json();
+    const { query, mode } = await req.json();
 
-    // Check if mock API is enabled
-    if (process.env.USE_MOCK_API === 'true') {
-      return NextResponse.json(MOCK_RESPONSE);
-    }
-
-    // Initialize OpenAI client with the API key from the request
-    const openai = new OpenAI({
-      apiKey: apiKey || process.env.OPENAI_API_KEY,
+    console.log('API route received query:', query);
+    
+    // Call the RAG API backend
+    const response = await fetch(`${RAG_API_URL}/query`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query }),
     });
 
-    // Generate initial summary for Mode A if requested
-    const isInitialSummary = mode === 'A' && messages.length === 0;
-
-    let prompt = '';
-
-    if (isInitialSummary) {
-      prompt = 'You are a code review assistant. Please provide an initial summary of the code changes, highlighting major points and potential areas of interest or concern.';
+    if (!response.ok) {
+      console.error(`Error from RAG API: ${response.status} ${response.statusText}`);
+      throw new Error(`Failed to fetch from RAG API: ${response.statusText}`);
     }
 
-    // Call OpenAI API
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        { role: 'system', content: 'You are a helpful code review assistant that provides detailed, insightful feedback on code.' },
-        ...messages,
-        ...(isInitialSummary ? [{ role: 'user', content: prompt }] : [])
-      ],
-    });
+    // Parse the response from the RAG API
+    const data: RAGAPIResponse = await response.json();
+    console.log('RAG API response received:', JSON.stringify(data, null, 2));
 
-    // Extract the response
-    const assistantMessage = response.choices[0].message.content || '';
+    // Ensure the response has the expected format
+    if (!data.answer) {
+      console.error('Invalid response format from RAG API:', data);
+      throw new Error('Invalid response format from RAG API');
+    }
 
-    // Log the interaction (in a real app, this would go to a database)
-    console.log(`[${new Date().toISOString()}] User: ${messages.length > 0 ? messages[messages.length - 1].content : 'Initial request'}`);
-    console.log(`[${new Date().toISOString()}] Assistant: ${assistantMessage}`);
-
-    // Return the response
+    // Return a properly formatted response that the frontend expects
     return NextResponse.json<ChatResponse>({
-      message: assistantMessage,
-      timestamp: new Date().toISOString()
+      content: data.answer,
+      timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
     console.error('Error processing chat request:', error);
     return NextResponse.json(
-      { error: 'Failed to process request' },
+      { error: 'Failed to process request', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     );
   }
