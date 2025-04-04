@@ -1,14 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Chat } from './components/Chat';
+import { Chat, Message } from './components/Chat';
 import { ModeSelector } from './components/ModeSelector';
 import { Settings } from './components/Settings';
+import { CustomDialog } from './components/CustomDialog';
 
 export default function Home() {
   const [mode, setMode] = useState<'A' | 'B'>('A');
   const [apiKey, setApiKey] = useState('');
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]); // Explicitly typed as Message[]
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [pendingMode, setPendingMode] = useState<'A' | 'B' | null>(null);
 
   // Load API key from localStorage on initial render
   useEffect(() => {
@@ -27,6 +31,30 @@ export default function Home() {
     localStorage.setItem('openai-api-key', key);
   };
 
+  const handleModeChange = (newMode: 'A' | 'B') => {
+    if (messages.length > 0) {
+      setPendingMode(newMode);
+      setIsDialogOpen(true);
+      return;
+    }
+    setMode(newMode);
+    setMessages([]); // Clear chat history
+  };
+
+  const confirmModeChange = () => {
+    if (pendingMode) {
+      setMode(pendingMode);
+      setMessages([]);
+    }
+    setIsDialogOpen(false);
+    setPendingMode(null);
+  };
+
+  const cancelModeChange = () => {
+    setIsDialogOpen(false);
+    setPendingMode(null);
+  };
+
   return (
     <div className="flex flex-col h-screen">
       <header className="bg-white dark:bg-gray-900 border-b shadow-sm p-4">
@@ -42,10 +70,10 @@ export default function Home() {
       </header>
 
       <main className="flex-1 container mx-auto p-4 flex flex-col max-w-8xl">
-        <ModeSelector mode={mode} onModeChange={setMode} />
+        <ModeSelector mode={mode} onModeChange={handleModeChange} />
         
         <div className="flex-1 border rounded-lg shadow-sm overflow-hidden">
-          <Chat mode={mode} />
+          <Chat mode={mode} messages={messages} setMessages={setMessages} />
         </div>
       </main>
 
@@ -54,6 +82,14 @@ export default function Home() {
         onClose={() => setIsSettingsOpen(false)}
         apiKey={apiKey}
         onApiKeyChange={handleApiKeyChange}
+      />
+
+      <CustomDialog
+        isOpen={isDialogOpen}
+        title="Confirm Mode Change"
+        message="Switching modes will erase the chat history. Are you sure you want to proceed?"
+        onConfirm={confirmModeChange}
+        onCancel={cancelModeChange}
       />
     </div>
   );

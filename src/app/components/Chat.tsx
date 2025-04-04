@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { ChatMessage } from './ChatMessage';
 import { MarkdownRenderer } from './MarkdownRenderer';
 
-interface Message {
+export interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: string;
@@ -12,10 +12,11 @@ interface Message {
 
 interface ChatProps {
   mode: 'A' | 'B';
+  messages: Message[];
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
 }
 
-export function Chat({ mode }: ChatProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export function Chat({ mode, messages, setMessages }: ChatProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -23,7 +24,7 @@ export function Chat({ mode }: ChatProps) {
   // Reset messages when mode changes
   useEffect(() => {
     setMessages([]);
-  }, [mode]);
+  }, [mode, setMessages]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
