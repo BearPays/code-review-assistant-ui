@@ -2,7 +2,54 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 
 const MOCK_RESPONSE: { message: string; timestamp: string } = {
-  message: `Here is a mock response with a Java code snippet:\n\n\`\`\`java\npublic class HelloWorld {\n    public static void main(String[] args) {\n        System.out.println(\"Hello, World!\");\n    }\n}\n\`\`\`\n\nThis is a placeholder response for development purposes.`,
+  message: `# My Heading
+
+## Subheading
+
+This is a text demonstration in which we will be **bolding** some text, making text *italic*, and also, we are going to show a \`code snippet\`.
+
+### Python Code Snippet
+
+The following is a little piece of Python code:
+
+\`\`\`python
+def hello_world(name):
+    """A simple function that greets you"""
+    print(f"Hello, {name}!")
+
+hello_world("Mark")
+\`\`\`
+
+### Bullet Points
+
+Here are some bullet points:
+- Point 1
+- Point 2
+- Point 3
+
+#### Numbered List
+
+Alternatively, here's a numbered list:
+1. Number 1
+2. Number 2
+3. Number 3
+
+For strikethrough, you can use \`~~strikethrough~~\` to achieve the following output: ~~strikethrough~~
+
+##### Hyperlink
+
+Lastly, [Click here to visit Google](https://www.google.com)
+
+-----
+### Another Heading
+
+More text goes here. 
+
+#### Bold & Italic
+
+You can even use ***bold and italic*** together.
+
+That is all for this markdown demonstration. Goodbye!`,
   timestamp: new Date().toISOString(),
 };
 

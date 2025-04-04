@@ -1,5 +1,8 @@
 'use client';
 
+import { JSX } from 'react';
+import { MarkdownRenderer } from './MarkdownRenderer';
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -8,9 +11,10 @@ interface Message {
 
 interface ChatMessageProps {
   message: Message;
+  renderContent?: (content: string) => JSX.Element | string;
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
+export function ChatMessage({ message, renderContent }: ChatMessageProps) {
   const isUser = message.role === 'user';
   const formattedTime = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
   
@@ -30,7 +34,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
             Assistant
           </div>
         )}
-        <div className="mt-1 whitespace-pre-wrap">{message.content}</div>
+        <div className="mt-1 whitespace-pre-wrap">
+          {renderContent ? renderContent(message.content) : (
+            isUser ? message.content : <MarkdownRenderer markdown={message.content} />
+          )}
+        </div>
         <div className="mt-2 text-xs opacity-70 text-right">
           {formattedTime}
         </div>

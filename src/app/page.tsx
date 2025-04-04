@@ -41,7 +41,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="flex-1 container mx-auto p-4 flex flex-col max-w-4xl">
+      <main className="flex-1 container mx-auto p-4 flex flex-col max-w-8xl">
         <ModeSelector mode={mode} onModeChange={setMode} />
         
         <div className="flex-1 border rounded-lg shadow-sm overflow-hidden">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ChatMessage } from './ChatMessage';
+import { MarkdownRenderer } from './MarkdownRenderer';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -184,6 +185,13 @@ export function Chat({ mode }: ChatProps) {
           <ChatMessage 
             key={index} 
             message={message} 
+            renderContent={(content) =>
+              message.role === 'assistant' ? (
+                <MarkdownRenderer markdown={content} />
+              ) : (
+                content
+              )
+            }
           />
         ))}
         
