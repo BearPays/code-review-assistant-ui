@@ -12,7 +12,7 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user';
-  const formattedTime = new Date(message.timestamp).toLocaleTimeString();
+  const formattedTime = new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
   
   return (
     <div 
@@ -25,9 +25,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
             : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
         }`}
       >
-        <div className="text-sm font-medium">
-          {isUser ? 'You' : 'Assistant'}
-        </div>
+        {!isUser && (
+          <div className="text-sm font-medium">
+            Assistant
+          </div>
+        )}
         <div className="mt-1 whitespace-pre-wrap">{message.content}</div>
         <div className="mt-2 text-xs opacity-70 text-right">
           {formattedTime}
@@ -35,4 +37,4 @@ export function ChatMessage({ message }: ChatMessageProps) {
       </div>
     </div>
   );
-} 
+}
