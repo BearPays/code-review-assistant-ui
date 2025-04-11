@@ -83,6 +83,8 @@ export async function POST(req: Request) {
     // Check if we should use mock API instead of the real RAG API
     if (process.env.USE_MOCK_API === 'true') {
       console.log('Using mock API response');
+      // Add a delay to simulate loading
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       return NextResponse.json<ChatResponse>({
         content: MOCK_RESPONSE.message,
         timestamp: new Date().toISOString(),

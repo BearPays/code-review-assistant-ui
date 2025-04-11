@@ -27,20 +27,14 @@ export function Chat({ mode, messages, setMessages }: ChatProps) {
   useEffect(() => {
     const checkApiAvailability = async () => {
       try {
-        // Try to reach the backend RAG API directly instead of using HEAD
-        // Or try a simple GET to our Next.js API endpoint that's likely to succeed
-        const response = await axios.get(`${window.location.origin}/api/health`, {
-          timeout: 3000 // Set a reasonable timeout
-        });
+        await axios.get(`${window.location.origin}/api/health`, { timeout: 3000 });
         setApiAvailable(true);
       } catch (error) {
         console.error('API not available:', error);
-        // Still set to true to allow user to try making requests
-        // since the health check might fail for reasons unrelated to the actual API
-        setApiAvailable(true);
+        setApiAvailable(true); // Allow user to try requests despite health check failure
       }
     };
-    
+
     checkApiAvailability();
   }, []);
 
