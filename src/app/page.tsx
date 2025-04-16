@@ -10,18 +10,28 @@ import Image from 'next/image';
 export default function Home() {
   const [mode, setMode] = useState<'A' | 'B'>('A');
   const [apiKey, setApiKey] = useState('');
+  const [selectedProject, setSelectedProject] = useState('project_1');
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]); // Explicitly typed as Message[]
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [pendingMode, setPendingMode] = useState<'A' | 'B' | null>(null);
 
-  // Load API key from localStorage on initial render
+  // Load settings from localStorage on initial render
   useEffect(() => {
     const storedApiKey = localStorage.getItem('openai-api-key');
+    const storedProject = localStorage.getItem('selected-project');
+    
     if (storedApiKey) {
       setApiKey(storedApiKey);
-    } else {
-      // Open settings if no API key is found
+    }
+    
+    if (storedProject) {
+      setSelectedProject(storedProject);
+    }
+    
+    // Open settings if no API key is found
+    if (!storedApiKey) {
       setIsSettingsOpen(true);
     }
   }, []);
@@ -30,6 +40,14 @@ export default function Home() {
   const handleApiKeyChange = (key: string) => {
     setApiKey(key);
     localStorage.setItem('openai-api-key', key);
+  };
+  
+  // Save selected project to localStorage when it changes
+  const handleProjectChange = (project: string) => {
+    setSelectedProject(project);
+    localStorage.setItem('selected-project', project);
+    // Reset session ID when project changes
+    setSessionId(null);
   };
 
   const handleModeChange = (newMode: 'A' | 'B') => {
@@ -82,7 +100,14 @@ export default function Home() {
         <ModeSelector mode={mode} onModeChange={handleModeChange} />
         
         <div className="flex-1 border rounded-lg shadow-sm overflow-hidden">
-          <Chat mode={mode} messages={messages} setMessages={setMessages} />
+          <Chat 
+            mode={mode} 
+            messages={messages} 
+            setMessages={setMessages} 
+            selectedProject={selectedProject}
+            sessionId={sessionId}
+            setSessionId={setSessionId}
+          />
         </div>
       </main>
 
@@ -91,6 +116,8 @@ export default function Home() {
         onClose={() => setIsSettingsOpen(false)}
         apiKey={apiKey}
         onApiKeyChange={handleApiKeyChange}
+        selectedProject={selectedProject}
+        onProjectChange={handleProjectChange}
       />
 
       <CustomDialog

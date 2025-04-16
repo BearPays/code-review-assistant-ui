@@ -15,13 +15,21 @@ interface ChatProps {
   mode: 'A' | 'B';
   messages: Message[];
   setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+  selectedProject: string;
+  sessionId: string | null;
+  setSessionId: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
-export function Chat({ mode, messages, setMessages }: ChatProps) {
+export function Chat({ mode, messages, setMessages, selectedProject, sessionId, setSessionId }: ChatProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [apiAvailable, setApiAvailable] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Reset session ID when mode or project changes
+  useEffect(() => {
+    setSessionId(null);
+  }, [mode, selectedProject, setSessionId]);
 
   // Check if our API is available
   useEffect(() => {
@@ -64,15 +72,25 @@ export function Chat({ mode, messages, setMessages }: ChatProps) {
     setIsLoading(true);
     try {
       console.log('Sending initial code review request');
+      console.log('Selected project:', selectedProject);
+      console.log('Current session ID:', sessionId);
       
-      // Call our Next.js API route
+      // Call our Next.js API route with the selected project and session ID
       const response = await axios.post('/api/chat', {
         query: 'Provide an initial summary of the code changes.',
         mode,
         messages: [], // Start with empty context for initial review
+        selectedProject,
+        sessionId
       });
 
       console.log('Response received:', response.data);
+
+      // Store the session ID received from the backend
+      if (response.data.sessionId) {
+        console.log('Setting session ID:', response.data.sessionId);
+        setSessionId(response.data.sessionId);
+      }
 
       // Handle the response
       if (response.data && response.data.content) {
@@ -147,15 +165,25 @@ export function Chat({ mode, messages, setMessages }: ChatProps) {
     try {
       console.log('Sending user query:', input);
       console.log('With message history:', updatedMessages.length);
+      console.log('Selected project:', selectedProject);
+      console.log('Current session ID:', sessionId);
       
       // Send the updated messages array that includes the current user message
       const response = await axios.post('/api/chat', {
         query: input,
         mode,
         messages: updatedMessages,
+        selectedProject,
+        sessionId
       });
       
       console.log('Response received:', response.data);
+      
+      // Store the session ID received from the backend
+      if (response.data.sessionId) {
+        console.log('Setting session ID:', response.data.sessionId);
+        setSessionId(response.data.sessionId);
+      }
       
       // Handle the response
       if (response.data && response.data.content) {

@@ -52,35 +52,39 @@ That is all for this markdown demonstration. Goodbye!`,
   timestamp: new Date().toISOString(),
 };
 
-// Define response structure matching what the frontend expects
+// Define new response structure from the backend API
+interface BackendResponse {
+  session_id: string;
+  answer: string;
+  sources?: Array<{
+    text_preview: string;
+    filename: string;
+    // Other source properties
+  }>;
+  collections_used?: string[];
+  mode: string;
+  pr_id: string;
+}
+
+// Define response structure for our frontend
 export interface ChatResponse {
   content: string;
   timestamp: string;
+  sessionId: string;
+  sources?: any[];
 }
 
-// Define structure of the RAG API response
-interface RAGAPIResponse {
-  answer: string;
-  sources?: Array<{
-    file_path: string;
-    file_name: string;
-    file_type: string;
-    file_size: number;
-    creation_date: string;
-    last_modified_date: string;
-  }>;
-}
-
-const RAG_API_URL = 'http://localhost:8001';
+const API_URL = 'http://localhost:8000/chat';
 
 export async function POST(req: Request) {
   try {
-    const { query, mode, messages = [] } = await req.json();
+    const { query, mode, messages = [], selectedProject, sessionId } = await req.json();
 
     console.log('API route received query:', query);
-    console.log('API route received messages:', messages.length);
+    console.log('API route received project:', selectedProject);
+    console.log('API route received sessionId:', sessionId);
     
-    // Check if we should use mock API instead of the real RAG API
+    // Check if we should use mock API instead of the real backend API
     if (process.env.USE_MOCK_API === 'true') {
       console.log('Using mock API response');
       // Add a delay to simulate loading
@@ -88,64 +92,60 @@ export async function POST(req: Request) {
       return NextResponse.json<ChatResponse>({
         content: MOCK_RESPONSE.message,
         timestamp: new Date().toISOString(),
+        sessionId: sessionId || 'mock-session-1234',
+        sources: []
       });
     }
     
-    // Prepare a more contextual query if there are previous messages
-    let contextualQuery = query;
-    if (messages.length > 0) {
-      // Get the last few messages to provide context (limit to avoid token limits)
-      const recentMessages = messages.slice(-5);
-      const conversationContext = recentMessages
-        .map((msg: { role: string; content: string }) => `${msg.role}: ${msg.content}`)
-        .join('\n');
-      
-      // Append conversation history to the query for better context
-      contextualQuery = `Previous conversation:\n${conversationContext}\n\nCurrent query: ${query}`;
-    }
+    // Map UI mode to backend API mode
+    const apiMode = mode === 'A' ? 'co_reviewer' : 'interactive_assistant';
     
-    console.log('Sending contextual query to RAG API:', contextualQuery.substring(0, 100) + '...');
+    // Prepare request body for the backend API
+    const requestBody = {
+      query,
+      pr_id: selectedProject,
+      mode: apiMode,
+      session_id: sessionId || null
+    };
     
-    // Call the RAG API backend
-    const response = await fetch(`${RAG_API_URL}/query`, {
+    console.log('Sending request to backend API:', JSON.stringify(requestBody));
+    
+    // Call the backend API
+    const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ query: contextualQuery }),
+      body: JSON.stringify(requestBody),
     });
 
-    // Get the response status and text for better error handling
-    const status = response.status;
-    const statusText = response.statusText;
-    
     if (!response.ok) {
-      console.error(`Error from RAG API: ${status} ${statusText}`);
-      throw new Error(`Failed to fetch from RAG API: ${statusText}`);
+      const errorText = await response.text();
+      console.error(`Error from backend API: ${response.status} ${response.statusText}`, errorText);
+      throw new Error(`Failed to fetch from backend API: ${response.statusText}`);
     }
 
-    // Parse the response from the RAG API
-    const data = await response.json();
-    console.log('RAG API response received:', JSON.stringify(data, null, 2).substring(0, 200) + '...');
+    // Parse the response from the backend API
+    const data: BackendResponse = await response.json();
+    console.log('Backend API response received:', JSON.stringify(data, null, 2).substring(0, 200) + '...');
 
     // Ensure the response has the expected format
     if (!data || typeof data !== 'object') {
-      console.error('Invalid response format from RAG API: Not an object');
-      throw new Error('Invalid response format from RAG API: Not an object');
+      console.error('Invalid response format from backend API: Not an object');
+      throw new Error('Invalid response format from backend API: Not an object');
     }
     
-    if (!data.answer && !data.message) {
-      console.error('Invalid response format from RAG API: No answer or message property', data);
-      throw new Error('Invalid response format from RAG API: Missing answer property');
+    if (!data.answer || !data.session_id) {
+      console.error('Invalid response format from backend API: Missing required properties', data);
+      throw new Error('Invalid response format from backend API: Missing required properties');
     }
 
-    // Handle different response formats - prefer 'answer' but fall back to 'message'
-    const content = data.answer || data.message;
-    
     // Return a properly formatted response that the frontend expects
     return NextResponse.json<ChatResponse>({
-      content,
+      content: data.answer,
       timestamp: new Date().toISOString(),
+      sessionId: data.session_id,
+      sources: data.sources || []
     });
   } catch (error) {
     console.error('Error processing chat request:', error);

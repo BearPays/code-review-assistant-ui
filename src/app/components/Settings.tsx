@@ -7,14 +7,18 @@ interface SettingsProps {
   onClose: () => void;
   apiKey: string;
   onApiKeyChange: (key: string) => void;
+  selectedProject: string;
+  onProjectChange: (project: string) => void;
 }
 
-export function Settings({ isOpen, onClose, apiKey, onApiKeyChange }: SettingsProps) {
+export function Settings({ isOpen, onClose, apiKey, onApiKeyChange, selectedProject, onProjectChange }: SettingsProps) {
   const [inputKey, setInputKey] = useState(apiKey);
+  const [inputProject, setInputProject] = useState(selectedProject);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onApiKeyChange(inputKey);
+    onProjectChange(inputProject);
     onClose();
   };
   
@@ -51,11 +55,29 @@ export function Settings({ isOpen, onClose, apiKey, onApiKeyChange }: SettingsPr
             </p>
           </div>
           
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1" htmlFor="project">
+              Select PR/Project
+            </label>
+            <select
+              id="project"
+              value={inputProject}
+              onChange={(e) => setInputProject(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="project_1">Project 1</option>
+              <option value="project_2">Project 2</option>
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              Select the PR/project you want to review or discuss.
+            </p>
+          </div>
+          
           <div className="flex justify-end space-x-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border rounded-md hover:bg-gray-100 cursor-pointer"
+              className="px-4 py-2 border rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
             >
               Cancel
             </button>
