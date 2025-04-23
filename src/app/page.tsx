@@ -9,7 +9,6 @@ import Image from 'next/image';
 
 export default function Home() {
   const [mode, setMode] = useState<'A' | 'B'>('A');
-  const [apiKey, setApiKey] = useState('');
   const [selectedProject, setSelectedProject] = useState('project_1');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -19,28 +18,12 @@ export default function Home() {
 
   // Load settings from localStorage on initial render
   useEffect(() => {
-    const storedApiKey = localStorage.getItem('openai-api-key');
     const storedProject = localStorage.getItem('selected-project');
-    
-    if (storedApiKey) {
-      setApiKey(storedApiKey);
-    }
     
     if (storedProject) {
       setSelectedProject(storedProject);
     }
-    
-    // Open settings if no API key is found
-    if (!storedApiKey) {
-      setIsSettingsOpen(true);
-    }
   }, []);
-
-  // Save API key to localStorage when it changes
-  const handleApiKeyChange = (key: string) => {
-    setApiKey(key);
-    localStorage.setItem('openai-api-key', key);
-  };
   
   // Save selected project to localStorage when it changes
   const handleProjectChange = (project: string) => {
@@ -114,8 +97,6 @@ export default function Home() {
       <Settings
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        apiKey={apiKey}
-        onApiKeyChange={handleApiKeyChange}
         selectedProject={selectedProject}
         onProjectChange={handleProjectChange}
       />

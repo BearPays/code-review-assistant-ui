@@ -5,19 +5,15 @@ import { useState } from 'react';
 interface SettingsProps {
   isOpen: boolean;
   onClose: () => void;
-  apiKey: string;
-  onApiKeyChange: (key: string) => void;
   selectedProject: string;
   onProjectChange: (project: string) => void;
 }
 
-export function Settings({ isOpen, onClose, apiKey, onApiKeyChange, selectedProject, onProjectChange }: SettingsProps) {
-  const [inputKey, setInputKey] = useState(apiKey);
+export function Settings({ isOpen, onClose, selectedProject, onProjectChange }: SettingsProps) {
   const [inputProject, setInputProject] = useState(selectedProject);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onApiKeyChange(inputKey);
     onProjectChange(inputProject);
     onClose();
   };
@@ -38,23 +34,6 @@ export function Settings({ isOpen, onClose, apiKey, onApiKeyChange, selectedProj
         </div>
         
         <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1" htmlFor="apiKey">
-              OpenAI API Key
-            </label>
-            <input
-              type="password"
-              id="apiKey"
-              value={inputKey}
-              onChange={(e) => setInputKey(e.target.value)}
-              placeholder="sk-..."
-              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Your API key is stored locally and never sent to our servers.
-            </p>
-          </div>
-          
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1" htmlFor="project">
               Select PR/Project
