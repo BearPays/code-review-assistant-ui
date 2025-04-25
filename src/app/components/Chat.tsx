@@ -77,7 +77,7 @@ export function Chat({ mode, messages, setMessages, selectedProject, sessionId, 
       
       // Call our Next.js API route with the selected project and session ID
       const response = await axios.post('/api/chat', {
-        query: 'Provide an initial summary of the code changes.',
+        query: 'start review',
         mode,
         messages: [], // Start with empty context for initial review
         selectedProject,

@@ -56,12 +56,12 @@ That is all for this markdown demonstration. Goodbye!`,
 interface BackendResponse {
   session_id: string;
   answer: string;
-  sources?: Array<{
-    text_preview: string;
-    filename: string;
+  // sources?: Array<{
+  //  text_preview: string;
+  //  filename: string;
     // Other source properties
-  }>;
-  collections_used?: string[];
+  // }>;
+  // collections_used?: string[];
   mode: string;
   pr_id: string;
 }
@@ -71,7 +71,7 @@ export interface ChatResponse {
   content: string;
   timestamp: string;
   sessionId: string;
-  sources?: any[];
+  // sources?: any[];
 }
 
 const API_URL = 'http://localhost:8000/chat';
@@ -93,7 +93,7 @@ export async function POST(req: Request) {
         content: MOCK_RESPONSE.message,
         timestamp: new Date().toISOString(),
         sessionId: sessionId || 'mock-session-1234',
-        sources: []
+        // sources: []
       });
     }
     
@@ -145,7 +145,7 @@ export async function POST(req: Request) {
       content: data.answer,
       timestamp: new Date().toISOString(),
       sessionId: data.session_id,
-      sources: data.sources || []
+      // sources: data.sources || []
     });
   } catch (error) {
     console.error('Error processing chat request:', error);
