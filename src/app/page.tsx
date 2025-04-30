@@ -10,6 +10,7 @@ import Image from 'next/image';
 export default function Home() {
   const [mode, setMode] = useState<'A' | 'B'>('A');
   const [selectedProject, setSelectedProject] = useState('project_1');
+  const [participantId, setParticipantId] = useState('');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]); // Explicitly typed as Message[]
@@ -19,9 +20,14 @@ export default function Home() {
   // Load settings from localStorage on initial render
   useEffect(() => {
     const storedProject = localStorage.getItem('selected-project');
+    const storedParticipantId = localStorage.getItem('participant-id');
     
     if (storedProject) {
       setSelectedProject(storedProject);
+    }
+    
+    if (storedParticipantId) {
+      setParticipantId(storedParticipantId);
     }
   }, []);
   
@@ -31,6 +37,12 @@ export default function Home() {
     localStorage.setItem('selected-project', project);
     // Reset session ID when project changes
     setSessionId(null);
+  };
+  
+  // Save participant ID to localStorage when it changes
+  const handleParticipantIdChange = (id: string) => {
+    setParticipantId(id);
+    localStorage.setItem('participant-id', id);
   };
 
   const handleModeChange = (newMode: 'A' | 'B') => {
@@ -90,6 +102,7 @@ export default function Home() {
             selectedProject={selectedProject}
             sessionId={sessionId}
             setSessionId={setSessionId}
+            participantId={participantId}
           />
         </div>
       </main>
@@ -99,6 +112,8 @@ export default function Home() {
         onClose={() => setIsSettingsOpen(false)}
         selectedProject={selectedProject}
         onProjectChange={handleProjectChange}
+        participantId={participantId}
+        onParticipantIdChange={handleParticipantIdChange}
       />
 
       <CustomDialog

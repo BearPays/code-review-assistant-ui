@@ -18,9 +18,10 @@ interface ChatProps {
   selectedProject: string;
   sessionId: string | null;
   setSessionId: React.Dispatch<React.SetStateAction<string | null>>;
+  participantId: string;
 }
 
-export function Chat({ mode, messages, setMessages, selectedProject, sessionId, setSessionId }: ChatProps) {
+export function Chat({ mode, messages, setMessages, selectedProject, sessionId, setSessionId, participantId }: ChatProps) {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [apiAvailable, setApiAvailable] = useState(true);
@@ -81,7 +82,8 @@ export function Chat({ mode, messages, setMessages, selectedProject, sessionId, 
         mode,
         messages: [], // Start with empty context for initial review
         selectedProject,
-        sessionId
+        sessionId,
+        participantId
       });
 
       console.log('Response received:', response.data);
@@ -174,7 +176,8 @@ export function Chat({ mode, messages, setMessages, selectedProject, sessionId, 
         mode,
         messages: updatedMessages,
         selectedProject,
-        sessionId
+        sessionId,
+        participantId
       });
       
       console.log('Response received:', response.data);

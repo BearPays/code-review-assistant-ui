@@ -7,14 +7,18 @@ interface SettingsProps {
   onClose: () => void;
   selectedProject: string;
   onProjectChange: (project: string) => void;
+  participantId: string;
+  onParticipantIdChange: (participantId: string) => void;
 }
 
-export function Settings({ isOpen, onClose, selectedProject, onProjectChange }: SettingsProps) {
+export function Settings({ isOpen, onClose, selectedProject, onProjectChange, participantId, onParticipantIdChange }: SettingsProps) {
   const [inputProject, setInputProject] = useState(selectedProject);
+  const [inputParticipantId, setInputParticipantId] = useState(participantId);
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onProjectChange(inputProject);
+    onParticipantIdChange(inputParticipantId);
     onClose();
   };
   
@@ -49,6 +53,23 @@ export function Settings({ isOpen, onClose, selectedProject, onProjectChange }: 
             </select>
             <p className="text-xs text-gray-500 mt-1">
               Select the PR/project you want to review or discuss.
+            </p>
+          </div>
+          
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1" htmlFor="participantId">
+              Participant ID
+            </label>
+            <input
+              id="participantId"
+              type="text"
+              value={inputParticipantId}
+              onChange={(e) => setInputParticipantId(e.target.value)}
+              className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Enter your participant ID"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Enter the participant ID for this review session.
             </p>
           </div>
           

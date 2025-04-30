@@ -78,11 +78,12 @@ const API_URL = 'http://localhost:8000/chat';
 
 export async function POST(req: Request) {
   try {
-    const { query, mode, messages = [], selectedProject, sessionId } = await req.json();
+    const { query, mode, messages = [], selectedProject, sessionId, participantId } = await req.json();
 
     console.log('API route received query:', query);
     console.log('API route received project:', selectedProject);
     console.log('API route received sessionId:', sessionId);
+    console.log('API route received participantId:', participantId);
     
     // Check if we should use mock API instead of the real backend API
     if (process.env.USE_MOCK_API === 'true') {
@@ -105,7 +106,8 @@ export async function POST(req: Request) {
       query,
       pr_id: selectedProject,
       mode: apiMode,
-      session_id: sessionId || null
+      session_id: sessionId || null,
+      participant_id: participantId || null
     };
     
     console.log('Sending request to backend API:', JSON.stringify(requestBody));
