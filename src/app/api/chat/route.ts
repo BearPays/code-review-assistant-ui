@@ -78,7 +78,7 @@ const API_URL = 'http://localhost:8000/chat';
 
 export async function POST(req: Request) {
   try {
-    const { query, mode, messages = [], selectedProject, sessionId, participantId } = await req.json();
+    const { query, mode, selectedProject, sessionId, participantId } = await req.json();
 
     console.log('API route received query:', query);
     console.log('API route received project:', selectedProject);
