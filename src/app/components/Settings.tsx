@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface SettingsProps {
   isOpen: boolean;
@@ -14,16 +14,40 @@ interface SettingsProps {
 export function Settings({ isOpen, onClose, selectedProject, onProjectChange, participantId, onParticipantIdChange }: SettingsProps) {
   const [inputProject, setInputProject] = useState(selectedProject);
   const [inputParticipantId, setInputParticipantId] = useState(participantId);
-  
+  const [projectOptions, setProjectOptions] = useState<string[]>([]);
+  const [warning, setWarning] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch('/api/projects');
+        const data = await response.json();
+
+        if (data.projects.length === 0) {
+          setWarning('No projects available. Please check the server.');
+        } else {
+          setWarning(null);
+        }
+
+        setProjectOptions(data.projects);
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+        setWarning('Failed to fetch projects. Please try again later.');
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onProjectChange(inputProject);
     onParticipantIdChange(inputParticipantId);
     onClose();
   };
-  
+
   if (!isOpen) return null;
-  
+
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full p-6">
@@ -36,7 +60,13 @@ export function Settings({ isOpen, onClose, selectedProject, onProjectChange, pa
             ✕
           </button>
         </div>
-        
+
+        {warning && (
+          <div className="mb-4 p-2 bg-yellow-100 text-yellow-700 border border-yellow-500 rounded">
+            {warning}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1" htmlFor="project">
@@ -48,14 +78,17 @@ export function Settings({ isOpen, onClose, selectedProject, onProjectChange, pa
               onChange={(e) => setInputProject(e.target.value)}
               className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="project_1">Project 1</option>
-              <option value="project_2">Project 2</option>
+              {projectOptions.map((project) => (
+                <option key={project} value={project}>
+                  {project.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())}
+                </option>
+              ))}
             </select>
             <p className="text-xs text-gray-500 mt-1">
               Select the PR/project you want to review or discuss.
             </p>
           </div>
-          
+
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1" htmlFor="participantId">
               Participant ID
@@ -72,7 +105,7 @@ export function Settings({ isOpen, onClose, selectedProject, onProjectChange, pa
               Enter the participant ID for this review session.
             </p>
           </div>
-          
+
           <div className="flex justify-end space-x-2">
             <button
               type="button"
