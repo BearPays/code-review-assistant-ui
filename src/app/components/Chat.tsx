@@ -238,7 +238,7 @@ export function Chat({ mode, messages, setMessages, selectedProject, sessionId, 
           <div className="text-center mt-8">
             <button
               onClick={handleInitialCodeReview}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               disabled={!apiAvailable}
             >
               Generate Initial Code Review
