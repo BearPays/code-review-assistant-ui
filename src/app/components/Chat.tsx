@@ -233,7 +233,7 @@ export function Chat({ mode, messages, setMessages, selectedProject, sessionId, 
         </div>
       )}
       
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-36">
         {messages.length === 0 && mode === 'A' && !isLoading && (
           <div className="text-center mt-8">
             <button
@@ -279,30 +279,32 @@ export function Chat({ mode, messages, setMessages, selectedProject, sessionId, 
         <div ref={messagesEndRef} />
       </div>
       
-      <form onSubmit={handleSubmit} className="border-t p-4">
-        <div className="flex items-center space-x-2">
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={apiAvailable ? "Type your message..." : "API unavailable. Please start the backend server."}
-            className="flex-1 border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
-            disabled={isLoading || !apiAvailable}
-            rows={3}
-            onInput={(e) => {
-              const target = e.target as HTMLTextAreaElement;
-              target.style.height = 'auto';
-              target.style.height = `${Math.min(target.scrollHeight, 200)}px`;
-            }}
-          />
-          <button
-            type="submit"
-            disabled={isLoading || input.trim() === ''}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
-          >
-            Send
-          </button>
-        </div>
-      </form>
+      <div className="fixed bottom-0 flex-1 container mx-auto py-4 pr-0 pl-0 flex flex-col" style={{ paddingRight: 'calc(var(--spacing) * 12)', paddingLeft: 'calc(var(--spacing) * 4)' }}>
+        <form onSubmit={handleSubmit} className="bottom-0 flex-1 container p-4 flex flex-col border bg-white dark:bg-gray-900 p-4 shadow-md my-2 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder={apiAvailable ? "Type your message..." : "API unavailable. Please start the backend server."}
+              className="flex-1 border rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+              disabled={isLoading || !apiAvailable}
+              rows={3}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+                target.style.height = `${Math.min(target.scrollHeight, 200)}px`;
+              }}
+            />
+            <button
+              type="submit"
+              disabled={isLoading || input.trim() === ''}
+              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 cursor-pointer"
+            >
+              Send
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
