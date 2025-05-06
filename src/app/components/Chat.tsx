@@ -247,7 +247,7 @@ export function Chat({ mode, messages, setMessages, selectedProject, sessionId, 
         )}
 
         {messages.length === 0 && mode === 'A' && isLoading && (
-          <div className="text-center text-gray-500 mt-8">
+          <div className="text-center text-gray-500 animate-pulse mt-8">
             Generating code review summary...
           </div>
         )}
