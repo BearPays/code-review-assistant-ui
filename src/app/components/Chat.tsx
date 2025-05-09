@@ -294,6 +294,12 @@ export function Chat({ mode, messages, setMessages, selectedProject, sessionId, 
                 target.style.height = 'auto';
                 target.style.height = `${Math.min(target.scrollHeight, 200)}px`;
               }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e);
+                }
+              }}
             />
             <button
               type="submit"
